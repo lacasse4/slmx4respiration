@@ -1,4 +1,4 @@
-# vernierrespiration
+## slmx4respiration
 
 This repo holds few Python3 programs that interacts with the Vernier Respiration Belt sensor (GDX-RB). 
 The main objective was to create a simple program that extract respiration frequency in breath per minute (bpm) from a Vernier GDX-RB sensor and transmit this information to MaxMSP. This program was written in Python3 and is named 'vernier_to_max.py'. The other programs contained in this repo were used as tests.
@@ -27,4 +27,3 @@ To receive data in MaxMSP
     - create a "udpreceive 7400" object
     - link its output to a message's input 
 
-# slmx4respiration
