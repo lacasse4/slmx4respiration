@@ -1,16 +1,22 @@
 import os
 import time
+import platform
 from pythonosc.osc_server import BlockingOSCUDPServer
 from pythonosc.dispatcher import Dispatcher
 
 IP_MULTICAST = "224.0.0.1"
 PORT = 7400
 
+plat = platform.system()
+
 def handler(address, *args):
     print(f"{address}: {args}")
     print("Starting SLMX4 transmission to Max")
     time.sleep(1)
-    os.execl("/usr/bin/python3", "python3", "slmx4_to_max.py", args[0])
+    if platform.system() == "Darwin":
+        os.execl("/Library/Frameworks/Python.framework/Versions/3.10/bin/python3", "python3", "slmx4_to_max.py", args[0])
+    else:
+        os.execl("/usr/bin/python3", "python3", "slmx4_to_max.py", args[0])
     quit()
 
 def default_handler(address, *args):
