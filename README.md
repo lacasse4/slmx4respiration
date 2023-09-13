@@ -1,29 +1,28 @@
 ## slmx4respiration
 
-This repo holds few Python3 programs that interacts with the Vernier Respiration Belt sensor (GDX-RB). 
-The main objective was to create a simple program that extract respiration frequency in breath per minute (bpm) from a Vernier GDX-RB sensor and transmit this information to MaxMSP. This program was written in Python3 and is named 'vernier_to_max.py'. The other programs contained in this repo were used as tests.
+This repo holds few Python3 programs that interacts with the SLMX4 radar sensor from SensorLogic. 
+The main objective was to create a program that extracts respiration frequency in breath per minute (bpm) and transmits it to MaxMSP.
 
-vernier_to_max.py uses 2 external modules:
-  1- the GDX library which allows communication the GDX-RB sensor.  
-     This library was provided by Vernier.
-  2- the OSC library which allows communication with MaxMSP 
+The program 'slmx4_to_max.py' interefaces with the SLMX4 sensor and transmits data to Max via OSC (i.e. updreceive).
+The program 'start_slmx4.py' was written to integrate 'slmx4_to_max.py' nicely to Max. It's a upd server. Once started, it waits for incomming OSC messages with the form '/address <ip_address>' where <ip_address> is the ip address of the machine hosting Max. Once the ip address is received, the program 'slmx4_to_max.py is launched. 
 
-Installation
-  Prior to running this program, some python module must be installed.
-  On macOS, open a terminal and execute the following commands
+# Installation:
+Prior to running this program, some python module must be installed. Open a terminal and execute the following commands:
   
-  $ pip3 install godirect
+  $ pip3 install pyserial
+  $ pip3 install protobuf
   $ pip3 install python-osc
+
+This has been tested on Linux (Raspberry Pi 32 bits) and macOS (Monterey). Note that the python files povided by SensorLogic where modified (i.e. slmx4_health_wrapper.py, slmx4_health_debug.py).
+
+# Setup:
+The target system is comprised of a Mac running MaxMSP and a Raspeberry Pi 4B connected to the SLMX4 sensor via USB. The two computers must be on the same local area network (LAN). 
+
+In Max, send the message '/address <ip_address>' with a 'updsend 224.0.0.1 7400' object. <ip_address> must be replace with the ip address of the Mac runnning Max. The updsend object must be 'updsend 224.0.0.1 7400'.
+Also in Max, create a 'udpreceive 7401' object and link its output to an empty message (top right input). 
+On the Raspberry Pi, open a terminal and start the slmx4 sensor with the following command:
   
-  Also, the running directory must contain the gdx/ directory 
-  provided by Vernier.
+  $ cd slmx4respiration
+  $ python3 start_slmx4.py
 
-To run the program
-  
-  $ python3 vernier_to_max.py
-
-To receive data in MaxMSP
-
-    - create a "udpreceive 7400" object
-    - link its output to a message's input 
-
+The click on the '/address <ip_address>' message. The empty message will show data from the SLMX4 sensor.

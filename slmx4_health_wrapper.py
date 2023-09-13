@@ -3,14 +3,16 @@ Wrapper for SLM-X4 Health firmware using the USB VCOM interface
 
 Copyright (C) 2022 Sensor Logic
 Written by Justin Hadella
+
+Modified by Vincent Lacasse 2023-09-13: Implemented a way to terminate thread nicely
 """
 import queue
 import serial
 import struct
 
 from threading import Thread
-from threading import Event
-from serial.serialutil import SerialException
+from threading import Event                   # added by VL 2023-09-13
+from serial.serialutil import SerialException # added by VL 2023-09-13
 
 import slmx4_usb_vcom_pb2 as pb
 
@@ -21,7 +23,7 @@ class slmx4_health():
         self._usb.port = port
         self._is_open = False
         self._msg_queue = queue.Queue()
-        self._stop_event = Event()
+        self._stop_event = Event() # added by VL 2023-09-13
         self._msg_thread = Thread(daemon=True, target=self._read_thread)
 
     def open(self):
@@ -89,7 +91,7 @@ class slmx4_health():
             rsp = self.read_from_queue()
             if rsp is not None:
                 break
-            if not self.msg_thread_is_alive():
+            if not self.msg_thread_is_alive():   # added by VL 2023-09-13
                 break
 
         return rsp
@@ -97,13 +99,13 @@ class slmx4_health():
     def read_from_queue(self):
         try:
             msg = self._msg_queue.get(timeout=1)
-        except queue.Empty as error:
+        except queue.Empty as error:              # added by VL 2023-09-13
             print("Queue empty after timeout")
             msg = None
             
         return msg
     
-    def msg_thread_is_alive(self):
+    def msg_thread_is_alive(self):                # added by VL 2023-09-13
         return self._msg_thread.is_alive()
 
     def _send_command(self, opcode):
@@ -118,14 +120,14 @@ class slmx4_health():
     def _read_thread(self):
         while True:
             msg = self._read_pb_msg()
-            if self._stop_event.is_set():
+            if self._stop_event.is_set():         # added by VL 2023-09-13
                 self.close()
                 break
             
             if msg is not None:
                 self._msg_queue.put_nowait(msg)
                 
-        print("Stopping Thread-1")
+        print("Stopping Thread-1")                # added by VL 2023-09-13
     
     def _read_pb_msg(self):
         '''
@@ -137,7 +139,7 @@ class slmx4_health():
         # Read the [len]
         try:
             msg = self._usb.read(4)
-        except SerialException as error:
+        except SerialException as error:          # added by VL 2023-09-13
             self._stop_event.set()
             print("Serial exception 1 occured")
             return None
@@ -150,7 +152,7 @@ class slmx4_health():
         # Read the [msg]
         try:
             msg = self._usb.read(len)
-        except SerialException as error:
+        except SerialException as error:          # added by VL 2023-09-13
             self._stop_event.set()
             print("Serial exception 2 occured")
             return None

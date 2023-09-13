@@ -5,7 +5,7 @@ from the SLM-X4 Health Firmware
 Copyright (C) 2022 Sensor Logic
 Written by Justin Hadella
 
-Modified by Vincent Lacasse, 2023-09-12: 4 lines removed from debug_health()
+Modified by Vincent Lacasse, 2023-09-12: 4 lines removed from debug_health(). Format modified.
 """
 import slmx4_usb_vcom_pb2 as pb
 
