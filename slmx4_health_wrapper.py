@@ -9,6 +9,8 @@ import serial
 import struct
 
 from threading import Thread
+from threading import Event
+from serial.serialutil import SerialException
 
 import slmx4_usb_vcom_pb2 as pb
 
@@ -19,6 +21,7 @@ class slmx4_health():
         self._usb.port = port
         self._is_open = False
         self._msg_queue = queue.Queue()
+        self._stop_event = Event()
         self._msg_thread = Thread(daemon=True, target=self._read_thread)
 
     def open(self):
@@ -86,8 +89,22 @@ class slmx4_health():
             rsp = self.read_from_queue()
             if rsp is not None:
                 break
+            if not self.msg_thread_is_alive():
+                break
 
         return rsp
+    
+    def read_from_queue(self):
+        try:
+            msg = self._msg_queue.get(timeout=1)
+        except queue.Empty as error:
+            print("Queue empty after timeout")
+            msg = None
+            
+        return msg
+    
+    def msg_thread_is_alive(self):
+        return self._msg_thread.is_alive()
 
     def _send_command(self, opcode):
         # Encode ONE_SHOT command
@@ -101,11 +118,14 @@ class slmx4_health():
     def _read_thread(self):
         while True:
             msg = self._read_pb_msg()
+            if self._stop_event.is_set():
+                self.close()
+                break
+            
             if msg is not None:
                 self._msg_queue.put_nowait(msg)
-    
-    def read_from_queue(self, **kwargs):
-        return self._msg_queue.get(*kwargs)
+                
+        print("Stopping Thread-1")
     
     def _read_pb_msg(self):
         '''
@@ -115,7 +135,12 @@ class slmx4_health():
         [len] is encoded as fixed length integer indicating the [msg] length
         '''
         # Read the [len]
-        msg = self._usb.read(4)
+        try:
+            msg = self._usb.read(4)
+        except SerialException as error:
+            self._stop_event.set()
+            print("Serial exception 1 occured")
+            return None
         
         # Extract the [len] value
         len = struct.unpack('I', msg)
@@ -123,7 +148,13 @@ class slmx4_health():
             len = len[0]
         
         # Read the [msg]
-        msg = self._usb.read(len)
+        try:
+            msg = self._usb.read(len)
+        except SerialException as error:
+            self._stop_event.set()
+            print("Serial exception 2 occured")
+            return None
+             
         rsp = pb.server_response_t()
         rsp.ParseFromString(msg)
 

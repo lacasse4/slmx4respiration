@@ -21,14 +21,17 @@ must be present in the directory where the code is ran.
   2- slmx4_usb_vcom_pb2.py
   3- slm4x_health_debug.py (if debugging output is required)
   
-To run the program
+To run the program:
   
-  $ python3 slmx4_to_max.py
+  $ python3 slmx4_to_max.py <ip_address>
+  
+  and use the machine's ip address where Max is running
+  or 127.0.0.1 if this code is ran on the same machine.
 
-To receive data in MaxMSP
+To receive data in MaxMSP:
 
     - create a "udpreceive 7401" object
-    - link its output to a message's input 
+    - link its output to a message's right input 
   
 Note:
 The radar data rate is fixed in hardware at 10 frames/second.
@@ -36,18 +39,45 @@ The radar data rate is fixed in hardware at 10 frames/second.
 '''
 
 import os
+import sys
 import time
 import signal
+import platform
+import socket
+from pythonosc import udp_client
 
 from slmx4_health_wrapper import slmx4_health
 from slmx4_health_debug import *
 
-from pythonosc import udp_client
+PORT = 7401
+
+# Validate command line and parameter
+
+if len(sys.argv) != 2:
+    print("usage:")
+    print("    slmx4_to_max.py <ip_address>")
+    quit()
+    
+ip_address = sys.argv[1];
+try:
+    socket.inet_aton(ip_address)
+except socket.error:
+    print("Invalid ip address")
+    quit()
+
 
 # Create a instance of the slmx4 health wrapper
-# slmx4 = slmx4_health('/dev/ttyACM0') # Linux
-# slmx4 = slmx4_health('COM3') # Windows
-slmx4 = slmx4_health('/dev/tty.usbmodem141101') # macOS
+
+slmx4 = None;
+if platform.system() == "Linux":
+    slmx4 = slmx4_health('/dev/ttyACM0') # Linux
+if platform.system() == "Windows":
+    slmx4 = slmx4_health('COM3') # Windows
+if platform.system() == "Darwin":
+    slmx4 = slmx4_health('/dev/tty.usbmodem141101') # macOS
+if slmx4 == None:
+    print("Unrecognized platform")
+    quit()
 
 # Open the USB VCOM connection
 
@@ -62,9 +92,7 @@ print('ver =', ver)
 
 # The udp_client object allow communication with Max (using OSC)
 
-ip = "127.0.0.1"    # loop back.  This script must be run on the same machine as MasMSP
-port = 7400         # port to be used in the "updreceive" object in MaxMSP
-client = udp_client.SimpleUDPClient(ip, port)
+client = udp_client.SimpleUDPClient(ip_address, PORT)
 
 # Setup a clean-up function that will be called when CTRL_C is pressed. 
 
@@ -85,16 +113,35 @@ slmx4.start()
 
 # Main loop
 while True:
+    if not slmx4.msg_thread_is_alive():
+        print("Message thread terminated unexpectedly")
+        quit()
+    
     # When data streaming, the SLM-X4 will send two messages back-to-back:
     # the health message, followed by the respiration waveform
     health = slmx4.read_msg()
+    if health == None:
+        continue
     resp_wave = slmx4.read_msg()
+    if health == None:
+        continue    
 
-    if os.name == 'nt':
+    if platform.system() == 'Windows':
         os.system('cls')
     else:
         os.system('clear')
 
     debug_health(health)
-    # debug_resp_wave(resp_wave)
-    client.send_message("/freq", health.health.respiration_rpm) 
+    # debug_resp_wave(resp_wave)    
+    client.send_message("/data",
+            [health.health.presence_detected,
+            health.health.respiration_detected,
+            health.health.movement_detected,
+            health.health.movement_type,
+            health.health.distance,
+            health.health.distance_conf,
+            health.health.respiration_rpm,
+            health.health.respiration_conf,
+            health.health.debug[0],          # frame count
+            health.health.debug[1]])         # minutes
+    
