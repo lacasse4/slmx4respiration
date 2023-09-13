@@ -9,9 +9,9 @@ The program 'start_slmx4.py' was written to integrate 'slmx4_to_max.py' nicely t
 ## Installation:
 Prior to running this program, some python module must be installed. Open a terminal and execute the following commands:
   
-  $ pip3 install pyserial
-  $ pip3 install protobuf
-  $ pip3 install python-osc
+  - $ pip3 install pyserial
+  - $ pip3 install protobuf
+  - $ pip3 install python-osc
 
 This has been tested on Linux (Raspberry Pi 32 bits) and macOS (Monterey). Note that the python files povided by SensorLogic where modified (i.e. slmx4_health_wrapper.py, slmx4_health_debug.py).
 
@@ -22,7 +22,7 @@ In Max, send the message '/address <ip_address>' with a 'updsend 224.0.0.1 7400'
 Also in Max, create a 'udpreceive 7401' object and link its output to an empty message (top right input). 
 On the Raspberry Pi, open a terminal and start the slmx4 sensor with the following command:
   
-  $ cd slmx4respiration
-  $ python3 start_slmx4.py
+  - $ cd slmx4respiration
+  - $ python3 start_slmx4.py
 
 The click on the '/address <ip_address>' message. The empty message will show data from the SLMX4 sensor.
