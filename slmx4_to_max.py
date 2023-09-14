@@ -142,6 +142,6 @@ while True:
             health.health.distance_conf,
             health.health.respiration_rpm,
             health.health.respiration_conf,
-            health.health.debug[0],          # frame count
-            health.health.debug[1]])         # minutes
+            int(health.health.debug[0]),          # frame count
+            int(health.health.debug[1])])         # minutes
     
