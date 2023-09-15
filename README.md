@@ -1,9 +1,10 @@
 # slmx4respiration
 This repo holds few Python3 programs to interacts with the SLMX4 radar sensor from SensorLogic. 
-The main objective was to create a program that extracts respiration frequency in breath per minute (bpm) and transmits it to MaxMSP.
+The objective is to create a program that extracts respiration frequency in breath per minute (bpm) and transmits it to Cycling '74 Max.
 
 The program 'slmx4_to_max.py' interefaces with the SLMX4 sensor and transmits data to Max via OSC (i.e. updreceive).
-The program 'start_slmx4.py' was written to integrate 'slmx4_to_max.py' nicely to Max. It's a upd server. Once started, it waits for incomming OSC messages with the form '/address <ip_address>' where <ip_address> is the ip address of the machine hosting Max. Once the ip address is received, the program 'slmx4_to_max.py is launched. 
+
+The program 'start_slmx4.py' was written to integrate 'slmx4_to_max.py' nicely to Max by providing the ip address of the machine hosting Max to 'slmx4_to_max.py'. 'start_slmx4.py' a upd server. Once started, it waits for incomming OSC messages of the form '/address <ip_address>' where <ip_address> is the ip address of the machine hosting Max. Once the ip address is received, the program 'slmx4_to_max.py is launched. This program is used in Approach 1 (bellow), but is not required in Approach 2 and 3. 
 
 ## Installation:
 Prior to running this program, some python module must be installed. Open a terminal and execute the following commands:
@@ -12,10 +13,10 @@ Prior to running this program, some python module must be installed. Open a term
   - $ pip3 install protobuf
   - $ pip3 install python-osc
 
-The Python programs have been tested on Linux raspberrypi 6.1.21 (32 bits) and macOS Monterey. Note that the python files povided by SensorLogic where modified (i.e. slmx4_health_wrapper.py, slmx4_health_debug.py).
+The Python programs have been tested on Linux raspberrypi 6.1.21 (32 bits) and macOS Monterey running Max 8.3.2 on Intel processor. Note that the python files povided by SensorLogic where modified (i.e. slmx4_health_wrapper.py, slmx4_health_debug.py). 
 
 ## Setup:
-The target system is comprised of a Mac running MaxMSP and a Raspeberry Pi 4B connected to the SLMX4 sensor via USB.  Note that the SLMX4 sensor must run the Health Firmware provided by SensorLogic. The two computers must be on the same local area network (LAN). Experience has shown that it is preferable to setup a separate network to host these machine (cabled or wifi). I have encountered unstable behaviors on a larger network where unrelated traffic was going on.
+The target system is comprised of a Mac running Max and a Raspeberry Pi 4B connected to the SLMX4 sensor via USB.  Note that the SLMX4 sensor must run the Health Firmware provided by SensorLogic. The two computers must be on the same local area network (LAN). Experience has shown that it is preferable to setup a separate network to host these machine (cabled or wifi). I have encountered unstable behaviors on a larger network where unrelated traffic was going on.
 
 ## Starting the system
 ### Approach 1
